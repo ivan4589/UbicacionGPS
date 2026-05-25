@@ -1,5 +1,6 @@
 package com.example.ubicaciongps
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
@@ -15,12 +16,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.io.Serializable
 import java.net.URL
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var progressBar: ProgressBar
+    private lateinit var btnActualizar: View
+    private lateinit var btnMiUbicacion: View
+    private var lastTaxiList: List<Taxi> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +39,23 @@ class MainActivity : AppCompatActivity() {
 
         recyclerView = findViewById(R.id.recyclerViewTaxis)
         progressBar = findViewById(R.id.progressBar)
+        btnActualizar = findViewById(R.id.btnActualizar)
+        btnMiUbicacion = findViewById(R.id.btnMiUbicacion)
+
+        btnActualizar.setOnClickListener {
+            fetchData()
+        }
+
+        btnMiUbicacion.setOnClickListener {
+            if (lastTaxiList.isNotEmpty()) {
+                val intent = Intent(this, MapsActivity::class.java)
+                intent.putExtra("TAXI_LIST", lastTaxiList as Serializable)
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "Cargando datos, espera un momento...", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         fetchData()
@@ -59,6 +81,8 @@ class MainActivity : AppCompatActivity() {
                         )
                     )
                 }
+
+                lastTaxiList = list
 
                 withContext(Dispatchers.Main) {
                     progressBar.visibility = View.GONE
